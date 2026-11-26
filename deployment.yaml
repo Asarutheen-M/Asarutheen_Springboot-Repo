@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hdfc-app
+  labels:
+    app: hdfc-app
+spec:
+  replicas: 4            # 4 PODS as in the diagram
+  selector:
+    matchLabels:
+      app: hdfc-app
+  template:
+    metadata:
+      labels:
+        app: hdfc-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: hdfc-app
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: 8080 }
+            initialDelaySeconds: 20
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            initialDelaySeconds: 40
+          resources:
+            requests: { cpu: 250m, memory: 384Mi }
+            limits:   { cpu: 500m, memory: 512Mi }

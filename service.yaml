@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hdfc-app
+  labels:
+    app: hdfc-app
+spec:
+  type: LoadBalancer     # Users reach the app through this
+  selector:
+    app: hdfc-app
+  ports:
+    - port: 80
+      targetPort: 8080

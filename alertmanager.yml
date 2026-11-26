@@ -1,0 +1,12 @@
+# Sends the alerts to the Admin by email
+route:
+  receiver: admin-email
+receivers:
+  - name: admin-email
+    email_configs:
+      - to: 'admin@example.com'
+        from: 'alerts@example.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@example.com'
+        auth_password: 'APP_PASSWORD_HERE'
+        send_resolved: true

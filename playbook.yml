@@ -1,0 +1,41 @@
+---
+- name: Build image, push to ECR, deploy to EKS
+  hosts: local
+  gather_facts: false
+  vars:
+    aws_region: ap-south-1
+    ecr_repo: hdfc-app
+    cluster_name: hdfc-eks
+    image_tag: latest
+    project_root: "{{ playbook_dir }}/.."
+  tasks:
+    - name: Get AWS account id
+      command: aws sts get-caller-identity --query Account --output text
+      register: account
+
+    - name: Set ECR URL
+      set_fact:
+        ecr_url: "{{ account.stdout }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ ecr_repo }}"
+
+    - name: Login to ECR
+      shell: >
+        aws ecr get-login-password --region {{ aws_region }} |
+        docker login --username AWS --password-stdin {{ account.stdout }}.dkr.ecr.{{ aws_region }}.amazonaws.com
+
+    - name: Build Docker image
+      command: docker build -t {{ ecr_url }}:{{ image_tag }} {{ project_root }}
+
+    - name: Push image to ECR
+      command: docker push {{ ecr_url }}:{{ image_tag }}
+
+    - name: Configure kubectl for EKS
+      command: aws eks update-kubeconfig --name {{ cluster_name }} --region {{ aws_region }}
+
+    - name: Render deployment with image
+      shell: sed "s|IMAGE_PLACEHOLDER|{{ ecr_url }}:{{ image_tag }}|" {{ project_root }}/k8s/deployment.yaml | kubectl apply -f -
+
+    - name: Apply service
+      command: kubectl apply -f {{ project_root }}/k8s/service.yaml
+
+    - name: Wait for rollout
+      command: kubectl rollout status deployment/hdfc-app --timeout=180s
