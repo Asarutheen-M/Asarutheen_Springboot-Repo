@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        AWS_ACCOUNT_ID = '123456789012'
+        AWS_ACCOUNT_ID = '024305968211'
         AWS_REGION     = 'ap-south-1'
         ECR_REPO       = 'hdfc-app'
         IMAGE_TAG      = "${BUILD_NUMBER}"
